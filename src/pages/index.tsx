@@ -1,17 +1,14 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import type { NextPage } from "next";
+import { useDropzone } from "react-dropzone";
 
 const Home: NextPage = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
-  const handleFileUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
+  const handleFileUpload = async (file: File) => {
     if (!file.name.endsWith(".zip")) {
       setError("Please upload a ZIP file");
       return;
@@ -25,165 +22,171 @@ const Home: NextPage = () => {
     try {
       setIsUploading(true);
       setError(null);
+      setUploadProgress(0);
 
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch("/api/process", {
-        method: "POST",
-        body: formData,
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", "/api/process", true);
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const progress = Math.round((event.loaded / event.total) * 100);
+          setUploadProgress(progress);
+        }
+      };
+
+      const response = await new Promise((resolve, reject) => {
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            resolve(JSON.parse(xhr.responseText));
+          } else {
+            try {
+              const error = JSON.parse(xhr.responseText);
+              reject(new Error(error.error.message));
+            } catch {
+              reject(new Error("An error occurred while processing the file"));
+            }
+          }
+        };
+        xhr.onerror = () => reject(new Error("Network error"));
+        xhr.send(formData);
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error.message);
-      }
-
-      const data = await response.json();
-      setResult(data);
+      setResult(response);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    const file = acceptedFiles[0];
+    if (file) {
+      await handleFileUpload(file);
+    }
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      "application/zip": [".zip"],
+    },
+    maxSize: 50 * 1024 * 1024, // 50MB
+    multiple: false,
+  });
+
   return (
-    <div className="container">
-      <main>
-        <h1>Email Content Sanitizer</h1>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4">
+        <h1 className="text-3xl font-bold text-center text-gray-900 mb-8">
+          Email Content Sanitizer
+        </h1>
 
-        <div className="upload-section">
-          <input
-            type="file"
-            accept=".zip"
-            onChange={handleFileUpload}
-            disabled={isUploading}
-          />
+        <div className="card p-8">
+          <div
+            {...getRootProps()}
+            className={`dropzone ${isDragActive ? "dropzone-active" : ""}`}
+          >
+            <input {...getInputProps()} />
+            <div className="space-y-4">
+              <div className="text-5xl text-gray-400">📥</div>
+              <p className="text-lg text-gray-600">
+                {isDragActive
+                  ? "Drop the ZIP file here..."
+                  : "Drag & drop a ZIP file here, or click to select"}
+              </p>
+              <p className="text-sm text-gray-500">
+                Maximum size: 50MB, up to 100 email files (.eml, .msg)
+              </p>
+            </div>
+          </div>
 
-          {isUploading && <p>Processing...</p>}
+          {isUploading && (
+            <div className="mt-4 space-y-2">
+              <div className="progress-bar">
+                <div
+                  className="progress-bar-fill"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+              <p className="text-sm text-gray-600 text-center">
+                Processing... {uploadProgress}%
+              </p>
+            </div>
+          )}
 
-          {error && <div className="error">{error}</div>}
+          {error && (
+            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600">{error}</p>
+            </div>
+          )}
 
           {result && (
-            <div className="result">
-              <h2>Results</h2>
-              <div>
-                <strong>Files Processed:</strong>{" "}
-                {result.stats.total_files_processed}
+            <div className="mt-8 space-y-6">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="card p-4 text-center">
+                  <p className="text-sm text-gray-500">Files Processed</p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {result.stats.total_files_processed}
+                  </p>
+                </div>
+                <div className="card p-4 text-center">
+                  <p className="text-sm text-gray-500">Items Sanitized</p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {result.stats.total_sanitized_items}
+                  </p>
+                </div>
+                <div className="card p-4 text-center">
+                  <p className="text-sm text-gray-500">Processing Time</p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {(result.stats.processing_time_ms / 1000).toFixed(2)}s
+                  </p>
+                </div>
               </div>
-              <div>
-                <strong>Items Sanitized:</strong>{" "}
-                {result.stats.total_sanitized_items}
-              </div>
-              <div>
-                <strong>Processing Time:</strong>{" "}
-                {result.stats.processing_time_ms}ms
-              </div>
-              <div className="content">
+
+              <div className="space-y-4">
                 {result.content.map((item: any, index: number) => (
-                  <div key={index} className="content-item">
-                    <div className="metadata">
+                  <div key={index} className="card p-6 space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div>
-                        <strong>File:</strong> {item.metadata.file_name}
+                        <p className="text-sm text-gray-500">File</p>
+                        <p className="font-medium text-gray-900">
+                          {item.metadata.file_name}
+                        </p>
                       </div>
                       <div>
-                        <strong>Type:</strong> {item.metadata.file_type}
+                        <p className="text-sm text-gray-500">Type</p>
+                        <p className="font-medium text-gray-900">
+                          {item.metadata.file_type}
+                        </p>
                       </div>
                       <div>
-                        <strong>Processed:</strong>{" "}
-                        {new Date(item.metadata.timestamp).toLocaleString()}
+                        <p className="text-sm text-gray-500">Sanitized Items</p>
+                        <p className="font-medium text-gray-900">
+                          {item.metadata.sanitized_items}
+                        </p>
                       </div>
                       <div>
-                        <strong>Sanitized Items:</strong>{" "}
-                        {item.metadata.sanitized_items}
-                      </div>
-                      <div>
-                        <strong>Word Count:</strong> {item.word_count}
+                        <p className="text-sm text-gray-500">Word Count</p>
+                        <p className="font-medium text-gray-900">
+                          {item.word_count}
+                        </p>
                       </div>
                     </div>
-                    <pre className="text">{item.text}</pre>
+                    <div className="bg-gray-50 rounded-lg p-4 font-mono text-sm whitespace-pre-wrap">
+                      {item.text}
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
           )}
         </div>
-      </main>
-
-      <style jsx>{`
-        .container {
-          min-height: 100vh;
-          padding: 2rem;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-
-        main {
-          width: 100%;
-          max-width: 800px;
-        }
-
-        h1 {
-          margin-bottom: 2rem;
-          text-align: center;
-        }
-
-        .upload-section {
-          padding: 2rem;
-          border: 2px dashed #ccc;
-          border-radius: 8px;
-          text-align: center;
-        }
-
-        .error {
-          margin-top: 1rem;
-          padding: 0.5rem;
-          color: red;
-          border: 1px solid red;
-          border-radius: 4px;
-        }
-
-        .result {
-          margin-top: 2rem;
-          text-align: left;
-        }
-
-        .content {
-          margin-top: 1rem;
-        }
-
-        .content-item {
-          margin-top: 1.5rem;
-          padding: 1.5rem;
-          border: 1px solid #eee;
-          border-radius: 8px;
-          background: #fff;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-
-        .metadata {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 0.5rem;
-          margin-bottom: 1rem;
-          padding: 1rem;
-          background: #f8f9fa;
-          border-radius: 4px;
-        }
-
-        .text {
-          white-space: pre-wrap;
-          word-wrap: break-word;
-          background: #f5f5f5;
-          padding: 1rem;
-          border-radius: 4px;
-          margin-top: 0.5rem;
-          font-size: 0.9rem;
-          line-height: 1.5;
-        }
-      `}</style>
+      </div>
     </div>
   );
 };
