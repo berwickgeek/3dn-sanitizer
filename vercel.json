@@ -1,17 +1,7 @@
 {
-  "version": 2,
-  "regions": ["syd1"],
   "buildCommand": "next build",
-  "outputDirectory": ".next",
-  "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        }
-      ]
-    }
-  ]
+  "devCommand": "next dev",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "outputDirectory": ".next"
 }
