@@ -1,11 +1,32 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import StreamZip from "node-stream-zip";
 import { simpleParser } from "mailparser";
+import MsgReader from "@kenjiuno/msgreader";
 import { promises as fs } from "fs";
 import path from "path";
 import os from "os";
 import formidable from "formidable";
 import type { File } from "formidable";
+
+interface EmailParser {
+  parse(content: Buffer): Promise<string | null>;
+}
+
+class EmlParser implements EmailParser {
+  async parse(content: Buffer): Promise<string | null> {
+    const email = await simpleParser(content);
+    return email.text || null;
+  }
+}
+
+class MsgParser implements EmailParser {
+  async parse(content: Buffer): Promise<string | null> {
+    const uint8Array = new Uint8Array(content);
+    const msgReader = new MsgReader(uint8Array.buffer);
+    const msg = msgReader.getFileData();
+    return msg.body || null;
+  }
+}
 
 type ProcessResponse = {
   stats: {
@@ -150,13 +171,18 @@ export default async function handler(
     let totalSanitizedItems = 0;
 
     for (const entry of Object.values(entries)) {
-      if (!entry.name.toLowerCase().endsWith('.eml')) continue;
+      const fileName = entry.name.toLowerCase();
+      if (!fileName.endsWith('.eml') && !fileName.endsWith('.msg')) continue;
 
       const content = await zip.entryData(entry);
-      const email = await simpleParser(content);
+      const parser: EmailParser = fileName.endsWith('.eml') 
+        ? new EmlParser() 
+        : new MsgParser();
+
+      const text = await parser.parse(content);
       
-      if (email.text) {
-        const sanitized = sanitizer.sanitize(email.text);
+      if (text) {
+        const sanitized = sanitizer.sanitize(text);
         const wordCount = sanitized.split(/\s+/).length;
         
         results.push({

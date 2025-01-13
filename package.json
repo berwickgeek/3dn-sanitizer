@@ -10,6 +10,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@kenjiuno/msgreader": "^1.22.0",
     "@types/formidable": "^3.4.5",
     "@types/mailparser": "^3.4.5",
     "formidable": "^3.5.2",

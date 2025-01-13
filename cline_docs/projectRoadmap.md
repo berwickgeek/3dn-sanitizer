@@ -14,7 +14,7 @@
   - [ ] Add metadata and timestamps
   - [ ] Implement export options
   - [ ] Add filtering capabilities
-- [ ] Implement MSG file support (Phase 2)
+- [x] Implement MSG file support
 - [ ] Deploy on Vercel with serverless functions
 
 ## Key Features
@@ -22,8 +22,7 @@
 - ZIP file processing with validation
   - Maximum 100 email files per ZIP
   - 50MB total size limit
-  - Support for .eml files (Phase 1)
-- MSG file support planned (Phase 2)
+  - Support for .eml and .msg files
 - Email content extraction
   - Main message body extraction
   - HTML to plain text conversion
@@ -52,3 +51,4 @@
 - [2024-01-17] Implemented file upload and validation
 - [2024-01-17] Added EML file processing support
 - [2024-01-17] Created basic PII sanitization engine
+- [2024-01-17] Added MSG file support with @kenjiuno/msgreader

@@ -28,10 +28,11 @@
   - MIME structure handling
   - Attachment extraction
 
-- msg-reader
+- @kenjiuno/msgreader
   - MSG file parsing
   - Outlook message format support
-  - Binary file handling
+  - Direct binary file handling
+  - No external dependencies
 
 ## Storage
 

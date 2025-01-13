@@ -5,7 +5,7 @@ A web-based service that processes email exports (.eml and .msg files), extracts
 ## Features
 
 - ZIP file processing with validation
-  - Support for .eml files (MSG support coming soon)
+  - Support for .eml and .msg files
   - Maximum 100 email files per ZIP
   - 50MB total size limit
 - Advanced PII sanitization
@@ -21,8 +21,8 @@ A web-based service that processes email exports (.eml and .msg files), extracts
 - Backend: Vercel Serverless Functions
 - File Processing: node-stream-zip
 - Email Parsing:
-  - EML: mailparser
-  - MSG: msg-reader
+  - EML: mailparser (for .eml files)
+  - MSG: @kenjiuno/msgreader (for .msg files)
 
 ## Getting Started
 
