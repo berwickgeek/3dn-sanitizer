@@ -82,9 +82,14 @@ const Home: NextPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-center text-gray-900 mb-8">
+        <h1 className="text-3xl font-bold text-center text-gray-900 mb-2">
           Email Content Sanitizer
         </h1>
+        <p className="text-center mb-8">
+          <a href="/privacy" className="text-blue-600 hover:text-blue-800">
+            Privacy & Data Management
+          </a>
+        </p>
 
         <div className="card p-8">
           <div
@@ -213,6 +218,26 @@ const Home: NextPage = () => {
           )}
         </div>
       </div>
+      <footer className="mt-8 py-4 border-t border-gray-200">
+        <div className="max-w-4xl mx-auto px-4 flex justify-between items-center">
+          <span className="text-gray-600">
+            Built by 3 Degrees North Pty Ltd
+          </span>
+          <div className="space-x-4">
+            <a href="/terms" className="text-gray-600 hover:text-gray-800">
+              Terms & Conditions
+            </a>
+            <a
+              href="https://github.com/berwickgeek/3dn-sanitizer"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-600 hover:text-gray-800"
+            >
+              View on GitHub
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };

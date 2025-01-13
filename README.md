@@ -1,96 +1,83 @@
-# Email Content Sanitization Service
+# Email Content Sanitizer
 
-A web-based service that processes email exports (.eml and .msg files), extracts user content, removes personally identifiable information (PII), and outputs sanitized content suitable for AI analysis.
+A tool for removing personally identifiable information (PII) from email exports while preserving meaningful content.
 
 ## Features
 
-- ZIP file processing with validation
-  - Support for .eml and .msg files
-  - Maximum 100 email files per ZIP
-  - 50MB total size limit
-- Advanced PII sanitization
-  - Personal information detection
-  - Organization information handling
-  - Australian-specific pattern recognition
-- Stateless processing architecture
-- Real-time processing with progress indicators
+- Supports EML and MSG file formats
+- Processes ZIP archives containing up to 100 email files
+- Detects and sanitizes:
+  - Names and email addresses
+  - Phone numbers
+  - Australian business identifiers (ABN, ACN)
+  - Australian addresses
+  - Other PII patterns
+- Context-aware analysis for better accuracy
+- JSON export of sanitized content
+- No data storage - all processing done in memory
+- No AI/ML - uses predefined rules and patterns
 
-## Tech Stack
+## Deployment to Vercel
 
-- Frontend: Next.js (React)
-- Backend: Vercel Serverless Functions
-- File Processing: node-stream-zip
-- Email Parsing:
-  - EML: mailparser (for .eml files)
-  - MSG: @kenjiuno/msgreader (for .msg files)
+1. Fork this repository
 
-## Getting Started
+2. Create a new project on Vercel:
 
-1. Clone the repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Run the development server:
-   ```bash
-   npm run dev
-   ```
-4. Open [http://localhost:3000](http://localhost:3000) in your browser
+   - Go to [Vercel](https://vercel.com)
+   - Click "New Project"
+   - Import your forked repository
+   - Select "Next.js" as the framework
+
+3. Configure project settings:
+
+   - Build Command: `npm run build`
+   - Output Directory: `.next`
+   - Install Command: `npm install`
+
+4. Environment Variables:
+
+   - No environment variables required
+
+5. Deploy:
+   - Click "Deploy"
+   - Vercel will automatically build and deploy your project
 
 ## Development
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run test` - Run tests
-- `npm run lint` - Run linter
+```bash
+# Install dependencies
+npm install
 
-## Documentation
+# Run development server
+npm run dev
 
-Detailed documentation can be found in the `cline_docs` directory:
+# Run tests
+npm test
 
-- [Project Roadmap](cline_docs/projectRoadmap.md)
-- [Technical Specification](cline_docs/tech-spec.md)
-- [Technology Stack](cline_docs/techStack.md)
-- [Codebase Summary](cline_docs/codebaseSummary.md)
-- [Development Hints](cline_docs/hints.md)
-
-## API Endpoints
-
-### POST /api/process
-
-Process a ZIP file containing email exports.
-
-Request:
-
-- Content-Type: multipart/form-data
-- Body: ZIP file containing email exports
-
-Response:
-
-```json
-{
-  "stats": {
-    "total_files_processed": number,
-    "total_sanitized_items": number
-  },
-  "content": [
-    {
-      "text": string,
-      "word_count": number
-    }
-  ]
-}
+# Build for production
+npm run build
 ```
 
-## Security
+## Technical Details
 
+- Built with Next.js and TypeScript
+- Uses Tailwind CSS for styling
+- Serverless API endpoint with rate limiting
+- Stateless processing with no data persistence
+- Comprehensive test coverage
+
+## Security Features
+
+- Rate limiting (5 requests per minute per IP)
 - File size limits (50MB max)
-- File type validation
-- Rate limiting (10 requests per hour per IP)
-- No persistent storage
-- Memory-efficient processing
+- File count limits (100 emails per ZIP)
+- No data storage
+- No third-party processing
 
 ## License
 
-MIT
+MIT License - See LICENSE file for details
+
+## Built By
+
+[3 Degrees North Pty Ltd](https://3degreesnorth.com.au)

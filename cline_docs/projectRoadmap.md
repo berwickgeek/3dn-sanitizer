@@ -6,14 +6,14 @@
   - [x] Improve name detection accuracy
   - [x] Add context-aware matching
   - [x] Implement confidence scoring
-- [ ] Upgrade user interface
-  - [ ] Add Tailwind CSS styling
-  - [ ] Implement drag-and-drop upload
-  - [ ] Add progress indicators
-- [ ] Improve output formatting
-  - [ ] Add metadata and timestamps
-  - [ ] Implement export options
-  - [ ] Add filtering capabilities
+- [x] Upgrade user interface
+  - [x] Add Tailwind CSS styling
+  - [x] Implement drag-and-drop upload
+  - [x] Add progress indicators
+- [x] Improve output formatting
+  - [x] Add metadata and timestamps
+  - [x] Implement JSON export
+  - [ ] Add filtering capabilities (optional)
 - [x] Implement MSG file support
 - [ ] Deploy on Vercel with serverless functions
 
@@ -55,3 +55,5 @@
 - [2024-01-17] Enhanced pattern matching with context analysis
 - [2024-01-17] Added token-based analysis for better accuracy
 - [2024-01-17] Implemented comprehensive test coverage
+- [2024-01-17] Added privacy and data management documentation
+- [2024-01-17] Implemented JSON export functionality

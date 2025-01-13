@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import rateLimit from "@/lib/rateLimit";
 import StreamZip from "node-stream-zip";
 import { simpleParser } from "mailparser";
 import MsgReader from "@kenjiuno/msgreader";
@@ -57,10 +58,27 @@ type ErrorResponse = {
   };
 };
 
+const limiter = rateLimit({
+  interval: 60 * 1000, // 60 seconds
+  uniqueTokenPerInterval: 500, // Max 500 users per interval
+});
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ProcessResponse | ErrorResponse>
 ) {
+  try {
+    // Allow 5 requests per minute per IP
+    await limiter.check(req, res, 5);
+  } catch {
+    return res.status(429).json({
+      error: {
+        code: 'RATE_LIMIT_EXCEEDED',
+        message: 'Too many requests, please try again later',
+      },
+    });
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({
       error: {
