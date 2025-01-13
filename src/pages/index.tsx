@@ -76,11 +76,33 @@ const Home: NextPage = () => {
                 <strong>Items Sanitized:</strong>{" "}
                 {result.stats.total_sanitized_items}
               </div>
+              <div>
+                <strong>Processing Time:</strong>{" "}
+                {result.stats.processing_time_ms}ms
+              </div>
               <div className="content">
                 {result.content.map((item: any, index: number) => (
                   <div key={index} className="content-item">
-                    <div>Word Count: {item.word_count}</div>
-                    <pre>{item.text}</pre>
+                    <div className="metadata">
+                      <div>
+                        <strong>File:</strong> {item.metadata.file_name}
+                      </div>
+                      <div>
+                        <strong>Type:</strong> {item.metadata.file_type}
+                      </div>
+                      <div>
+                        <strong>Processed:</strong>{" "}
+                        {new Date(item.metadata.timestamp).toLocaleString()}
+                      </div>
+                      <div>
+                        <strong>Sanitized Items:</strong>{" "}
+                        {item.metadata.sanitized_items}
+                      </div>
+                      <div>
+                        <strong>Word Count:</strong> {item.word_count}
+                      </div>
+                    </div>
+                    <pre className="text">{item.text}</pre>
                   </div>
                 ))}
               </div>
@@ -133,19 +155,33 @@ const Home: NextPage = () => {
         }
 
         .content-item {
-          margin-top: 1rem;
-          padding: 1rem;
+          margin-top: 1.5rem;
+          padding: 1.5rem;
           border: 1px solid #eee;
+          border-radius: 8px;
+          background: #fff;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .metadata {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 0.5rem;
+          margin-bottom: 1rem;
+          padding: 1rem;
+          background: #f8f9fa;
           border-radius: 4px;
         }
 
-        pre {
+        .text {
           white-space: pre-wrap;
           word-wrap: break-word;
           background: #f5f5f5;
           padding: 1rem;
           border-radius: 4px;
           margin-top: 0.5rem;
+          font-size: 0.9rem;
+          line-height: 1.5;
         }
       `}</style>
     </div>
