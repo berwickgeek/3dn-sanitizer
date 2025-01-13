@@ -27,15 +27,16 @@
 
 5. PII Sanitization Service
 
-   - Pattern matching engine
-   - Context analysis system
-   - Token analysis
-   - Replacement management
+   - Advanced pattern matching engine
+   - Context-aware analysis system
+   - Token-based analysis
+   - Smart replacement management
+   - Australian-specific patterns
 
 6. Response Formatter
    - Structures sanitized content
-   - Generates statistics
-   - Formats JSON response
+   - Generates detailed statistics
+   - Formats JSON response with metadata
 
 ## Data Flow
 
@@ -48,27 +49,27 @@
 2. File Processing
 
    - ZIP file is streamed and extracted
-   - Email files are identified and validated
+   - Email files (EML/MSG) are identified
    - Invalid files are rejected
 
 3. Content Processing
 
-   - Emails are parsed based on type (EML/MSG)
+   - Unified parser handles EML and MSG formats
    - Content is extracted and normalized
    - HTML is converted to plain text
    - Signatures and attachments are removed
 
 4. Sanitization
 
-   - Content passes through pattern matching
-   - Context analysis refines matches
-   - Token analysis provides additional verification
-   - PII is replaced with placeholders
+   - Multi-layer pattern matching
+   - Context analysis for improved accuracy
+   - Token analysis for better PII detection
+   - Smart replacement with categorized tokens
 
 5. Response Generation
    - Sanitized content is collected
-   - Statistics are calculated
-   - JSON response is formatted and returned
+   - Comprehensive statistics are calculated
+   - Detailed JSON response with metadata
 
 ## Error Handling
 
@@ -76,7 +77,7 @@
 
    - ZIP file size checks
    - File count validation
-   - File type verification
+   - File type verification (EML/MSG)
 
 2. Processing Errors
 
@@ -91,12 +92,17 @@
 
 ## External Dependencies
 
-- None (Stateless processing)
+- node-stream-zip for ZIP handling
+- mailparser for EML parsing
+- @kenjiuno/msgreader for MSG files
+- Jest for testing
 
 ## Recent Significant Changes
 
-- [2024-01-17] Initial project structure defined
-- [2024-01-17] Technical specification completed
+- [2024-01-17] Added MSG file support
+- [2024-01-17] Enhanced pattern matching with context analysis
+- [2024-01-17] Added token-based analysis
+- [2024-01-17] Implemented comprehensive testing
 
 ## Development Guidelines
 
@@ -105,6 +111,7 @@
    - Modular component structure
    - Clear separation of concerns
    - TypeScript interfaces for all components
+   - Comprehensive test coverage
 
 2. Error Management
 
@@ -119,6 +126,7 @@
    - Processing time tracking
 
 4. Testing Strategy
-   - Unit tests for each component
+   - Unit tests for pattern matching
    - Integration tests for workflows
    - Performance benchmarking
+   - Coverage monitoring

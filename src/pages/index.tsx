@@ -127,6 +127,32 @@ const Home: NextPage = () => {
 
           {result && (
             <div className="mt-8 space-y-6">
+              <div className="flex justify-between items-center mb-4">
+                <button
+                  onClick={() => {
+                    const blob = new Blob([JSON.stringify(result, null, 2)], {
+                      type: "application/json",
+                    });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "sanitized-content.json";
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                  }}
+                  className="btn btn-primary"
+                >
+                  Export JSON
+                </button>
+                <a
+                  href="/privacy"
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  Privacy & Data Management
+                </a>
+              </div>
               <div className="grid grid-cols-3 gap-4">
                 <div className="card p-4 text-center">
                   <p className="text-sm text-gray-500">Files Processed</p>
