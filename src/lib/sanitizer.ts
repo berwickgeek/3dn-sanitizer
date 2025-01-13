@@ -37,8 +37,18 @@ export class ContentSanitizer {
   private applyPatternSanitization(text: string): string {
     let sanitized = text;
 
-    // Apply each pattern category
-    for (const [category, patterns] of Object.entries(PATTERNS)) {
+    // Process patterns in specific order
+    const patternOrder = [
+      'EMAIL_PATTERNS',
+      'PHONE_PATTERNS',
+      'BUSINESS_PATTERNS',
+      'ADDRESS_PATTERNS',
+      'NAME_PATTERNS',
+      'OTHER_PATTERNS'
+    ];
+
+    for (const category of patternOrder) {
+      const patterns = PATTERNS[category as keyof typeof PATTERNS];
       for (const [type, pattern] of Object.entries(patterns)) {
         if (Array.isArray(pattern)) {
           pattern.forEach(p => {
@@ -56,18 +66,37 @@ export class ContentSanitizer {
   private applyPattern(text: string, category: string, type: string, pattern: RegExp): string {
     let count = (this.replacements.get(`${category}_${type}`) || 0) + 1;
     
+    // Special handling for compound patterns
+    if (category === 'EMAIL_PATTERNS' && type === 'QUOTED') {
+      return text.replace(pattern, () => `[EMAIL_${count++}]`);
+    }
+
+    if (category === 'ADDRESS_PATTERNS' && type === 'FULL') {
+      return text.replace(pattern, () => `[ADDRESS_${count++}]`);
+    }
+
+    if (category === 'BUSINESS_PATTERNS' && type === 'COMPANY') {
+      return text.replace(pattern, () => `[BUSINESS_${count++}]`);
+    }
+
     return text.replace(pattern, (match) => {
-      // Analyze context to confirm this is likely PII
-      const startPos = text.indexOf(match);
-      const context = ContextAnalyzer.analyzeContext(text, startPos, match.length);
-      
-      if (context.confidence > 0.5) {
-        const key = `[${category}_${type}_${count++}]`;
-        this.replacements.set(`${category}_${type}`, count);
-        return key;
+      switch (category) {
+        case 'EMAIL_PATTERNS':
+          return `[EMAIL_${count++}]`;
+        case 'PHONE_PATTERNS':
+          return `[PHONE_${count++}]`;
+        case 'BUSINESS_PATTERNS':
+          return `[IDENTIFIER_${count++}]`;
+        case 'ADDRESS_PATTERNS':
+          return `[ADDRESS_${count++}]`;
+        case 'NAME_PATTERNS': {
+          const startPos = text.indexOf(match);
+          const context = ContextAnalyzer.analyzeContext(text, startPos, match.length);
+          return context.confidence > 0.25 ? `[PERSON_${count++}]` : match;
+        }
+        default:
+          return `[${category.split('_')[0]}_${count++}]`;
       }
-      
-      return match;
     });
   }
 

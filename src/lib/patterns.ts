@@ -8,9 +8,9 @@ export const PATTERNS = {
   
   // Email Patterns
   EMAIL_PATTERNS: {
-    STANDARD: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
     QUOTED: /"[^"]+"\s*<[^>]+>/g,
-    UNUSUAL_TLD: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,})?/g
+    UNUSUAL_TLD: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,})?/g,
+    STANDARD: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g
   },
   
   // Name Patterns
@@ -32,26 +32,18 @@ export const PATTERNS = {
 
   // Australian Business Identifiers
   BUSINESS_PATTERNS: {
-    ABN: /\b\d{2}(?:\s?\d{3}){2}\s?\d{3}\b/g,
-    ACN: /\b\d{3}(?:\s?\d{3}){2}\b/g,
     COMPANY: [
       /\b[A-Z][a-zA-Z0-9\s&]+(?:Pty\.?\s)?Ltd\.?\b/g,
       /\b[A-Z][a-zA-Z0-9\s&]+Limited\b/g,
       /\b[A-Z][a-zA-Z0-9\s&]+(?:Incorporated|Inc\.?)\b/g,
       /\bT\/A\s+[A-Z][a-zA-Z0-9\s&]+\b/g
-    ]
+    ],
+    ABN: /\b\d{2}(?:\s?\d{3}){2}\s?\d{3}\b/g,
+    ACN: /\b\d{3}(?:\s?\d{3}){2}\b/g
   },
   
   // Australian Addresses
   ADDRESS_PATTERNS: {
-    STREET: new RegExp([
-      '\\b\\d+\\s+',
-      '(?:[A-Za-z]+\\s)+',
-      '(?:Street|St|Road|Rd|Avenue|Ave|Drive|Dr|Court|Ct|',
-      'Place|Pl|Boulevard|Blvd|Crescent|Cr|Way|Lane|Ln|',
-      'Circuit|Cct|Parade|Pde|Square|Sq|Close|Cl)',
-      '\\b'
-    ].join(''), 'gi'),
     FULL: new RegExp([
       '\\b\\d+\\s+',
       '(?:[A-Za-z]+\\s)+',
@@ -62,7 +54,15 @@ export const PATTERNS = {
       '(?:NSW|VIC|QLD|WA|SA|TAS|ACT|NT)\\s+',
       '\\d{4}\\b'
     ].join(''), 'gi'),
-    POBOX: /\bP\.?O\.?\s*Box\s+\d+\b/gi
+    POBOX: /\bP\.?O\.?\s*Box\s+\d+\b/gi,
+    STREET: new RegExp([
+      '\\b\\d+\\s+',
+      '(?:[A-Za-z]+\\s)+',
+      '(?:Street|St|Road|Rd|Avenue|Ave|Drive|Dr|Court|Ct|',
+      'Place|Pl|Boulevard|Blvd|Crescent|Cr|Way|Lane|Ln|',
+      'Circuit|Cct|Parade|Pde|Square|Sq|Close|Cl)',
+      '\\b'
+    ].join(''), 'gi')
   },
   
   // Other Identifiers
@@ -84,9 +84,9 @@ export const EMAIL_SIGNATURES = [
   
   // Complex signature blocks
   new RegExp([
-    '^[-_]{2,}\\r?\\n',
+    '^(?:Best|Kind|Warm|Regards|Sincerely|Thank you|Thanks).*\\r?\\n',
     '(?:[^\\n]+\\r?\\n){1,6}'  // Up to 6 lines of signature content
-  ].join(''), 'gm'),
+  ].join(''), 'gim'),
   
   // Phone/email blocks
   new RegExp([

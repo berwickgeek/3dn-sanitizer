@@ -17,7 +17,7 @@ export class ContextAnalyzer {
   private static CONTEXT_MARKERS = {
     GREETING: /^(?:Dear|Hi|Hello|Hey|Good morning|Good afternoon|Good evening)\b/i,
     INTRODUCTION: /(?:I am|This is|My name is|Speaking|Writing)\s+/i,
-    REFERENCE: /(?:regards to|referring to|about|concerning)\s+/i,
+    REFERENCE: /(?:regarding|regards to|referring to|about|concerning)\s+/i,
     SIGNATURE_START: /^(?:Best|Kind|Warm|Regards|Sincerely|Thank you|Thanks)\b/im
   };
 
@@ -77,8 +77,8 @@ export class TokenAnalyzer {
 
   static analyzeToken(token: string): TokenAnalysis {
     return {
-      isCapitalized: /^[A-Z][a-z]/.test(token),
-      isAllCaps: /^[A-Z]+$/.test(token),
+      isCapitalized: /^[A-Z]/.test(token),
+      isAllCaps: /^[A-Z0-9]+$/.test(token),
       containsDigits: /\d/.test(token),
       isCommonWord: this.COMMON_WORDS.has(token.toLowerCase()),
       length: token.length
