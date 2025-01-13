@@ -1,9 +1,11 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
-import StreamZip from 'node-stream-zip';
-import { simpleParser } from 'emailjs-mime-parser';
-import { promises as fs } from 'fs';
-import path from 'path';
-import os from 'os';
+import type { NextApiRequest, NextApiResponse } from "next";
+import StreamZip from "node-stream-zip";
+import { simpleParser } from "mailparser";
+import { promises as fs } from "fs";
+import path from "path";
+import os from "os";
+import formidable from "formidable";
+import type { File } from "formidable";
 
 type ProcessResponse = {
   stats: {
@@ -105,16 +107,28 @@ export default async function handler(
   }
 
   try {
+    const form = formidable({
+      maxFiles: 1,
+      maxFileSize: 50 * 1024 * 1024, // 50MB
+      filter: (part) => part.mimetype === 'application/zip',
+    });
+
+    // Parse the form data
+    const [fields, files] = await form.parse(req);
+    const uploadedFile = files.file?.[0] as File;
+
+    if (!uploadedFile) {
+      return res.status(400).json({
+        error: {
+          code: 'NO_FILE',
+          message: 'No file was uploaded',
+        },
+      });
+    }
+
     // Create temporary directory
     const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'email-sanitizer-'));
-    const zipPath = path.join(tempDir, 'upload.zip');
-
-    // Write uploaded file to disk
-    const chunks: Uint8Array[] = [];
-    for await (const chunk of req.body) {
-      chunks.push(chunk);
-    }
-    await fs.writeFile(zipPath, Buffer.concat(chunks));
+    const zipPath = uploadedFile.filepath;
 
     // Process ZIP file
     const zip = new StreamZip.async({ file: zipPath });

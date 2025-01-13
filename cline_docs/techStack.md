@@ -22,7 +22,7 @@
 
 ## Email Parsing
 
-- emailjs-mime-parser
+- mailparser
 
   - EML file parsing
   - MIME structure handling

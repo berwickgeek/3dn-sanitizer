@@ -21,7 +21,7 @@ A web-based service that processes email exports (.eml and .msg files), extracts
 - Backend: Vercel Serverless Functions
 - File Processing: node-stream-zip
 - Email Parsing:
-  - EML: emailjs-mime-parser
+  - EML: mailparser
   - MSG: msg-reader
 
 ## Getting Started
