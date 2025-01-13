@@ -7,6 +7,7 @@ import path from "path";
 import os from "os";
 import formidable from "formidable";
 import type { File } from "formidable";
+import { ContentSanitizer } from "@/lib/sanitizer";
 
 interface EmailParser {
   parse(content: Buffer): Promise<string | null>;
@@ -28,91 +29,33 @@ class MsgParser implements EmailParser {
   }
 }
 
+interface ProcessedEmail {
+  text: string;
+  word_count: number;
+  metadata: {
+    timestamp: string;
+    file_type: string;
+    file_name: string;
+    sanitized_items: number;
+  };
+}
+
 type ProcessResponse = {
   stats: {
     total_files_processed: number;
     total_sanitized_items: number;
+    processing_time_ms: number;
   };
-  content: Array<{
-    text: string;
-    word_count: number;
-  }>;
+  content: ProcessedEmail[];
 };
 
 type ErrorResponse = {
   error: {
     code: string;
     message: string;
+    details?: unknown;
   };
 };
-
-const PATTERNS = {
-  PHONE_PATTERNS: {
-    MOBILE: /(?:\+61|0)?(?:4[0-9]{2}|450)\s?[0-9]{3}\s?[0-9]{3}/g,
-    LANDLINE: /(?:\+61|0)?(?:[2378])\s?[0-9]{4}\s?[0-9]{4}/g,
-  },
-  EMAIL_PATTERNS: {
-    STANDARD: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
-    QUOTED: /"[^"]+"\s*<[^>]+>/g,
-  },
-  NAME_PATTERNS: {
-    FORMAL: /(?:Mr\.|Mrs\.|Ms\.|Dr\.|Prof\.)\s[A-Z][a-z]+(?:\s[A-Z][a-z]+)*/g,
-    CAPITALIZED_WORDS: /\b[A-Z][a-z]{1,20}\s+[A-Z][a-z]{1,20}\b/g,
-  },
-};
-
-const EMAIL_SIGNATURES = [
-  /^(?:Regards|Best regards|Kind regards|Cheers|Thanks|Thank you|Yours sincerely).{0,50}$/gm,
-  /^--$/m,
-  /^_{3,}$/m,
-  /^-{3,}$/m,
-];
-
-class ContentSanitizer {
-  private replacements = new Map<string, number>();
-
-  sanitize(text: string): string {
-    let sanitized = this.preprocessText(text);
-    sanitized = this.removeSignatures(sanitized);
-    sanitized = this.applyPatternSanitization(sanitized);
-    return sanitized;
-  }
-
-  private preprocessText(text: string): string {
-    return text
-      .replace(/\r\n/g, '\n')
-      .replace(/\s+/g, ' ')
-      .trim()
-      .replace(/^On.*wrote:$/gm, '')
-      .replace(/^>+/gm, '')
-      .replace(/^Sent from my.*$/gm, '');
-  }
-
-  private removeSignatures(text: string): string {
-    let result = text;
-    for (const pattern of EMAIL_SIGNATURES) {
-      result = result.replace(pattern, '');
-    }
-    return result.trim();
-  }
-
-  private applyPatternSanitization(text: string): string {
-    let sanitized = text;
-
-    for (const [category, patterns] of Object.entries(PATTERNS)) {
-      for (const [type, pattern] of Object.entries(patterns)) {
-        const count = (this.replacements.get(`${category}_${type}`) || 0) + 1;
-        sanitized = sanitized.replace(pattern, () => {
-          const key = `[${category}_${type}_${count}]`;
-          this.replacements.set(`${category}_${type}`, count);
-          return key;
-        });
-      }
-    }
-
-    return sanitized;
-  }
-}
 
 export default async function handler(
   req: NextApiRequest,
@@ -128,6 +71,7 @@ export default async function handler(
   }
 
   try {
+    const startTime = Date.now();
     const form = formidable({
       maxFiles: 1,
       maxFileSize: 50 * 1024 * 1024, // 50MB
@@ -183,24 +127,32 @@ export default async function handler(
       
       if (text) {
         const sanitized = sanitizer.sanitize(text);
-        const wordCount = sanitized.split(/\s+/).length;
+        const sanitizedItems = sanitized.match(/\[.*?\]/g)?.length || 0;
         
         results.push({
           text: sanitized,
-          word_count: wordCount,
+          word_count: sanitized.split(/\s+/).length,
+          metadata: {
+            timestamp: new Date().toISOString(),
+            file_type: fileName.endsWith('.eml') ? 'EML' : 'MSG',
+            file_name: entry.name,
+            sanitized_items: sanitizedItems,
+          }
         });
 
-        totalSanitizedItems += sanitized.match(/\[.*?\]/g)?.length || 0;
+        totalSanitizedItems += sanitizedItems;
       }
     }
 
     await zip.close();
     await fs.rm(tempDir, { recursive: true });
 
+    const endTime = Date.now();
     return res.status(200).json({
       stats: {
         total_files_processed: results.length,
         total_sanitized_items: totalSanitizedItems,
+        processing_time_ms: endTime - startTime,
       },
       content: results,
     });
