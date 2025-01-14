@@ -190,9 +190,14 @@ const Privacy: NextPage = () => {
       </div>
       <footer className="py-4 border-t border-gray-200">
         <div className="max-w-4xl mx-auto px-4 flex justify-between items-center">
-          <span className="text-gray-600">
+          <a
+            href="https://3degreesnorth.com.au"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gray-600 hover:text-gray-800"
+          >
             Built by 3 Degrees North Pty Ltd
-          </span>
+          </a>
           <div className="space-x-4">
             <a href="/terms" className="text-gray-600 hover:text-gray-800">
               Terms & Conditions

@@ -104,9 +104,27 @@ const Home: NextPage = () => {
                   ? "Drop the ZIP file here..."
                   : "Drag & drop a ZIP file here, or click to select"}
               </p>
-              <p className="text-sm text-gray-500">
-                Maximum size: 50MB, up to 100 email files (.eml, .msg)
-              </p>
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500">
+                  Maximum size: 50MB, up to 100 email files (.eml, .msg)
+                </p>
+                <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
+                  <p className="font-medium mb-2">How to use:</p>
+                  <ol className="list-decimal pl-5 space-y-1">
+                    <li>Open Outlook and go to your Sent folder</li>
+                    <li>
+                      Select and drag up to 100 messages to a folder on your
+                      desktop
+                    </li>
+                    <li>Compress (zip) the folder</li>
+                    <li>Upload the ZIP file here</li>
+                    <li>
+                      Use the Export JSON button to get the sanitized email
+                      content
+                    </li>
+                  </ol>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -135,7 +153,11 @@ const Home: NextPage = () => {
               <div className="flex justify-between items-center mb-4">
                 <button
                   onClick={() => {
-                    const blob = new Blob([JSON.stringify(result, null, 2)], {
+                    // Only export the text content from each file
+                    const textOnly = result.content.map(
+                      (item: { text: string }) => item.text
+                    );
+                    const blob = new Blob([JSON.stringify(textOnly, null, 2)], {
                       type: "application/json",
                     });
                     const url = URL.createObjectURL(blob);
@@ -220,9 +242,14 @@ const Home: NextPage = () => {
       </div>
       <footer className="mt-8 py-4 border-t border-gray-200">
         <div className="max-w-4xl mx-auto px-4 flex justify-between items-center">
-          <span className="text-gray-600">
+          <a
+            href="https://3degreesnorth.com.au"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gray-600 hover:text-gray-800"
+          >
             Built by 3 Degrees North Pty Ltd
-          </span>
+          </a>
           <div className="space-x-4">
             <a href="/terms" className="text-gray-600 hover:text-gray-800">
               Terms & Conditions
